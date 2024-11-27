@@ -100,18 +100,30 @@ void ConvertRGBtoGrayscale(void* img)
     pthread_t threads[THREAD_NUM];
     threadData threadData[THREAD_NUM];
     size_t chunck_size = size / THREAD_NUM;
+    size_t remainder = size % THREAD_NUM;
+
+        
 
 
     for (size_t i = 0; i < THREAD_NUM; i ++) {
         threadData[i].gray_values = gray_values;
         threadData[i].start = i * chunck_size;
-        threadData[i].end = (i == THREAD_NUM - 1) ? size : (i + 1) * chunck_size;
+        threadData[i].end = (i + 1) * chunck_size;
+
+        if (i == THREAD_NUM - 1) {
+        threadData[i].end += remainder;
+    }
+
         int rc = pthread_create(&threads[i],NULL,convertThread,&threadData[i]);
         if (rc) {
             fprintf(stderr, "Error creating thread %d. Return code: %d\n", i, rc);
             exit(EXIT_FAILURE);
         }      
     }
+
+    for (size_t i = 0; i < THREAD_NUM; i++) {
+    printf("Thread %zu: start=%d, end=%d\n", i, threadData[i].start, threadData[i].end);
+    }   
 
     for (int i = 0; i < THREAD_NUM; i++) {
         int rc = pthread_join(threads[i], NULL);
