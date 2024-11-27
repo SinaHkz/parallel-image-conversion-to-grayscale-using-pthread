@@ -1,5 +1,6 @@
 #include "utilities.h"
 
+
 void GetAttributes(FILE* inputFile, unsigned char** header, unsigned char** body, int* bodySize, int* width, int* height)
 {
     int size;
@@ -47,7 +48,6 @@ int WriteImage(char* fileName, unsigned char* header, unsigned char* body, int b
         printf("Error: Could not open file.\n");
         return OPENING_IMAGE_FAILURE;
     }
-
     if (header == NULL || body == NULL) {
         printf("Error: Header or body is null.\n");
         return OPENING_IMAGE_NULL_HB;
@@ -61,15 +61,22 @@ int WriteImage(char* fileName, unsigned char* header, unsigned char* body, int b
 }
 
 
-void ConvertRGBtoGrayscale(void* img)
+typedef struct 
 {
-    ImageData *data = (ImageData *) img;
-    unsigned char *rgb_values = data->rgbValues;
-    unsigned char *gray_values = data->grayValues;
-    size_t size = data->size;
+    unsigned char *gray_values;
+    int start;
+    int end;
+}threadData;
 
+
+
+void *convertThread(void *arg){
+    threadData *data = (threadData *)arg;
+    unsigned char *gray_values = data->gray_values;
+    int start = data->start;
+    int end = data->end;
     unsigned char red, green, blue, gray;
-    for (size_t i = 0; i < size; i += ADJACENT) {
+    for (size_t i = start; i < end; i += ADJACENT){
         red = gray_values[i];
         green = gray_values[i + 1];
         blue = gray_values[i + 2];
@@ -79,5 +86,38 @@ void ConvertRGBtoGrayscale(void* img)
         gray_values[i] = gray;
         gray_values[i+1] = gray;
         gray_values[i+2] = gray;
+    }
+    pthread_exit(NULL);
+}
+
+
+void ConvertRGBtoGrayscale(void* img)
+{
+    ImageData *data = (ImageData *) img;
+    unsigned char *rgb_values = data->rgbValues;
+    unsigned char *gray_values = data->grayValues;
+    size_t size = data->size;
+    pthread_t threads[THREAD_NUM];
+    threadData threadData[THREAD_NUM];
+    size_t chunck_size = size / THREAD_NUM;
+
+
+    for (size_t i = 0; i < THREAD_NUM; i ++) {
+        threadData[i].gray_values = gray_values;
+        threadData[i].start = i * chunck_size;
+        threadData[i].end = (i == THREAD_NUM - 1) ? size : (i + 1) * chunck_size;
+        int rc = pthread_create(&threads[i],NULL,convertThread,&threadData[i]);
+        if (rc) {
+            fprintf(stderr, "Error creating thread %d. Return code: %d\n", i, rc);
+            exit(EXIT_FAILURE);
+        }      
+    }
+
+    for (int i = 0; i < THREAD_NUM; i++) {
+        int rc = pthread_join(threads[i], NULL);
+        if (rc) {
+            fprintf(stderr, "Error joining thread %d. Return code: %d\n", i, rc);
+            exit(EXIT_FAILURE);
+        }
     }
 }

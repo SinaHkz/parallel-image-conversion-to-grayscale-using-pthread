@@ -47,6 +47,7 @@ int main(int argc, char *argv[])
         
         sprintf(outputFilename, OUTPUT_FILE_NAME, index);
         WriteImage(outputFilename, header, body, bodySize);
+        
     }
 
     free(results);
