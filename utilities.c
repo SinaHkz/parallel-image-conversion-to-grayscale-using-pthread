@@ -76,16 +76,43 @@ void *convertThread(void *arg){
     int start = data->start;
     int end = data->end;
     unsigned char red, green, blue, gray;
-    for (size_t i = start; i < end; i += ADJACENT){
+    for (size_t i = start; i < end; i += 3 * ADJACENT){
         red = gray_values[i];
         green = gray_values[i + 1];
         blue = gray_values[i + 2];
+        
 
         gray = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
 
         gray_values[i] = gray;
-        gray_values[i+1] = gray;
-        gray_values[i+2] = gray;
+        gray_values[i + 1] = gray;
+        gray_values[i + 2] = gray;
+
+        //unrolling 1
+
+        red = gray_values[i + 3];
+        green = gray_values[i + 4];
+        blue = gray_values[i + 5];
+        
+
+        gray = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+
+        gray_values[i + 3] = gray;
+        gray_values[i + 4] = gray;
+        gray_values[i + 5] = gray;
+
+        //unrolling 2
+
+        red = gray_values[i + 6];
+        green = gray_values[i + 7];
+        blue = gray_values[i + 8];
+        
+
+        gray = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+
+        gray_values[i + 6] = gray;
+        gray_values[i + 7] = gray;
+        gray_values[i + 8] = gray;
     }
     pthread_exit(NULL);
 }
