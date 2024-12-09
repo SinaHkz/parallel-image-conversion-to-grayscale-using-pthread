@@ -16,6 +16,7 @@
 #define OPENING_IMAGE_SUCCESS 0
 #define OPENING_IMAGE_FAILURE 1
 #define OPENING_IMAGE_NULL_HB 2
+#define THREAD_NUM 5
 
 typedef struct
 {
