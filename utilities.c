@@ -137,6 +137,11 @@ void ConvertRGBtoGrayscale(void* img)
         threadData[i].start = i * chunck_size;
         threadData[i].end = (i + 1) * chunck_size;
 
+        if (threadData[i].start % 3 != 0)
+            threadData[i].start -= threadData[i].start % 3;
+        if (threadData[i].end % 3 != 0)
+            threadData[i].end -= threadData[i].end % 3;
+
         if (i == THREAD_NUM - 1) {
         threadData[i].end += remainder;
     }
